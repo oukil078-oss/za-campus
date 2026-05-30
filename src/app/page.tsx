@@ -1,65 +1,16 @@
-import Image from "next/image";
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+import { Menu, X, GraduationCap, Star, ArrowRight, Tv, FileText, Brain, Award, Trophy, Shield, BookOpen } from "lucide-react";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+export default function HomePage() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  return (<div className="min-h-screen">
+    <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100"><div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16"><Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-lg bg-[#1e3a5f] flex items-center justify-center"><GraduationCap className="w-5 h-5 text-white"/></div><span className="text-xl font-bold text-[#1e3a5f]">Za<span style={{color:'#c8a951'}}>-Campus</span></span></Link><div className="hidden md:flex items-center gap-3"><Link href="/login" className="text-sm font-semibold text-white bg-[#1e3a5f] px-5 py-2.5 rounded-lg shadow-sm">Get Started</Link></div><button onClick={()=>setMobileOpen(!mobileOpen)} className="md:hidden p-2">{mobileOpen?<X className="w-5 h-5"/>:<Menu className="w-5 h-5"/>}</button></div></nav>
+    <section className="py-32 px-4 text-center" style={{background:"linear-gradient(135deg, #1e3a5f 0%, #0f2440 40%, #1a4a3d 100%)"}}><div className="max-w-4xl mx-auto"><div className="inline-flex items-center gap-2 bg-white/10 text-white/90 text-sm px-4 py-1.5 rounded-full mb-8 border border-white/20"><Star className="w-3.5 h-3.5" style={{fill:'#c8a951',color:'#c8a951'}}/>Algeria&apos;s Premier Learning Platform</div><h1 className="text-4xl sm:text-6xl font-bold text-white mb-6">Transform Your Academic <span style={{color:'#c8a951'}}>Journey</span></h1><p className="text-lg text-white/70 max-w-2xl mx-auto mb-10">A complete university LMS with courses, quizzes, progress tracking, and verified certificates.</p><Link href="/login" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold shadow-lg text-[#0f2440]" style={{background:'#c8a951'}}>Start Learning <ArrowRight className="w-4 h-4"/></Link></div></section>
+    <section className="py-24 px-4 bg-white"><div className="max-w-6xl mx-auto text-center mb-16"><h2 className="text-3xl font-bold mb-4">Everything for Academic Success</h2><p className="text-gray-500 max-w-2xl mx-auto">Students, teachers, and administrators — all in one seamless ecosystem.</p></div><div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">{[{icon:Tv,title:"Video Lectures",desc:"Stream high-quality video lectures.",color:"#3b82f6"},{icon:Brain,title:"Interactive Quizzes",desc:"Auto-graded quizzes with instant feedback.",color:"#8b5cf6"},{icon:Award,title:"Certificates",desc:"Earn professional certificates.",color:"#c8a951"},{icon:Trophy,title:"Leaderboards",desc:"Compete with peers across classes.",color:"#ef4444"},{icon:Shield,title:"Access Control",desc:"Role-based security.",color:"#6366f1"},{icon:BookOpen,title:"Full CMS",desc:"Complete content management.",color:"#10b981"}].map((f,i)=>(<div key={i} className="p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"><div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{backgroundColor:f.color+'20',color:f.color}}><f.icon className="w-6 h-6"/></div><h3 className="text-lg font-semibold mb-2">{f.title}</h3><p className="text-gray-500 text-sm">{f.desc}</p></div>))}</div></section>
+    <section className="py-24 px-4 bg-gray-50"><div className="max-w-6xl mx-auto text-center mb-16"><h2 className="text-3xl font-bold mb-4">Built for Everyone</h2></div><div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">{[{icon:Shield,role:"Administrators",items:["User Management","Class Administration","Platform Analytics"]},{icon:BookOpen,role:"Teachers",items:["Content Creation","Quiz Management","Progress Tracking"]},{icon:GraduationCap,role:"Students",items:["Video Lectures","Interactive Quizzes","Certificate Downloads"]}].map((c,i)=>(<div key={i} className="p-8 rounded-2xl bg-white border border-gray-100"><div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{background:"linear-gradient(135deg, #1e3a5f, #0f2440)"}}><c.icon className="w-6 h-6 text-white"/></div><h3 className="text-xl font-bold mb-2">{c.role}</h3><ul className="space-y-2.5">{c.items.map((item,j)=>(<li key={j} className="flex items-center gap-2.5 text-sm text-gray-700"><div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{backgroundColor:'#c8a951'}}/>{item}</li>))}</ul></div>))}</div></section>
+    <section className="py-24 px-4 text-center" style={{background:"linear-gradient(135deg, #1e3a5f 0%, #0f2440 40%, #1a4a3d 100%)"}}><div className="max-w-3xl mx-auto"><h2 className="text-3xl font-bold text-white mb-4">Ready to Elevate Your Academic Experience?</h2><p className="text-white/70 mb-8 text-lg">Join thousands of students and educators already using Za-Campus.</p><Link href="/login" className="inline-flex items-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg shadow-lg text-[#0f2440]" style={{background:'#c8a951'}}>Get Started Now <ArrowRight className="w-5 h-5"/></Link></div></section>
+    <footer className="bg-gray-900 text-gray-400 py-16 px-4"><div className="max-w-6xl mx-auto text-center text-sm">&copy; {new Date().getFullYear()} Za-Campus. All rights reserved.</div></footer>
+  </div>);
 }
