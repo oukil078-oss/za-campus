@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await requireAuth(["ADMIN"]);
     const [allUsers, allClasses, allModules, allQuizzes, allVideos, allFiles, allCerts] = await Promise.all([
-      db.user.findMany(), db.class.findMany(), db.module.findMany(), db.quiz.findMany(), db.video.findMany(), db.file.findMany(), db.certificate.findMany(),
+      db.user.findMany({}), db.class.findMany({}), db.module.findMany({}), db.quiz.findMany({ where: {} }), db.video.findMany({ where: {} }), db.file.findMany({ where: {} }), db.certificate.findMany({}),
     ]);
     const stats = {
       totalStudents: allUsers.filter((u: any) => u.role === "STUDENT" && u.isBanned !== "true").length,

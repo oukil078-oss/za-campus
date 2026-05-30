@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, ID } from "@/lib/db";
+import { db, ID, Query } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -41,11 +41,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     // Create grade
+    const mod = await db.module.findUnique({ where: { id: quiz.moduleId } });
     await db.grade.create({
-      data: { studentId: student.id, classId: (await db.module.findUnique({ where: { id: quiz.moduleId } }))?.classId || "",
+      data: { studentId: student.id, classId: mod?.classId || "",
         moduleId: quiz.moduleId, quizId: id, type: "MODULE_QUIZ", score: String(totalScore), maxScore: String(totalPoints), percentage: String(percentage), isPassed: isPassed ? "true" : "false" }
     });
 
     return NextResponse.json({ attempt: { score: totalScore, totalPoints, percentage, isPassed }, results: answerResults });
-  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+  } catch (e: any) { console.error("Submit error:", e.message); return NextResponse.json({ error: e.message }, { status: 500 }); }
 }

@@ -7,15 +7,12 @@ export async function GET() {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ leaderboard: [] });
     
-    let entries = await db.leaderboard.findMany({ orderBy: { totalScore: "desc" }, take: 50 });
+    const entries = await db.leaderboard.findMany({ orderBy: { totalScore: "desc" }, take: 50 });
     
-    // Enrich
     const enriched = await Promise.all(entries.map(async (e: any) => {
-      const [student, cls, studentUser] = await Promise.all([
-        db.student.findUnique({ where: { id: e.studentId } }),
-        db.class.findUnique({ where: { id: e.classId } }),
-        db.user.findUnique({ where: { id: (await db.student.findUnique({ where: { id: e.studentId } }))?.userId || "" } }),
-      ]);
+      const student = await db.student.findUnique({ where: { id: e.studentId } });
+      const studentUser = student ? await db.user.findUnique({ where: { id: student.userId } }) : null;
+      const cls = await db.class.findUnique({ where: { id: e.classId } });
       return { ...e, student: { ...student, user: studentUser || {} }, class: cls, totalScore: parseFloat(e.totalScore), rank: parseInt(e.rank) };
     }));
     
