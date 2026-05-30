@@ -1,0 +1,10 @@
+"use client";
+import { useEffect, useState } from "react";
+import { Users, BookOpen, GraduationCap, Award, FileText } from "lucide-react";
+export default function P() {
+  const [s,setS]=useState<any>({});const [l,setL]=useState(true);
+  useEffect(()=>{fetch("/api/admin/stats").then(r=>r.json()).then(d=>{setS(d.stats||{});setL(false)});},[]);
+  if(l) return <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"/></div>;
+  const arr=[{icon:Users,label:"Total Users",value:s?.totalUsers,c:"bg-blue-50 text-blue-600"},{icon:GraduationCap,label:"Students",value:s?.totalStudents,c:"bg-violet-50 text-violet-600"},{icon:BookOpen,label:"Teachers",value:s?.totalTeachers,c:"bg-emerald-50 text-emerald-600"},{icon:FileText,label:"Classes",value:s?.totalClasses,c:"bg-amber-50 text-amber-600"},{icon:Award,label:"Certificates",value:s?.certificates,c:"bg-teal-50 text-teal-600"},{icon:FileText,label:"Banned",value:s?.banned,c:"bg-red-50 text-red-600"}];
+  return (<div className="space-y-8 animate-fade-in"><div><h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1><p className="text-gray-500 mt-1">Complete system overview</p></div><div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">{arr.map((x,i)=>(<div key={i} className="card-premium p-4"><div className={`w-10 h-10 rounded-xl ${x.c} flex items-center justify-center mb-3`}><x.icon className="w-5 h-5"/></div><div className="text-2xl font-bold text-gray-900">{x.value??"-"}</div><div className="text-xs text-gray-500 mt-0.5">{x.label}</div></div>))}</div><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[{l:"Modules",v:s?.totalModules},{l:"Quizzes",v:s?.totalQuizzes},{l:"Videos",v:s?.totalVideos},{l:"Files",v:s?.totalFiles}].map((x,i)=>(<div key={i} className="card-premium p-4 text-center"><div className="text-xl font-bold text-gray-900">{x.v??"-"}</div><div className="text-xs text-gray-500">{x.l}</div></div>))}</div></div>);
+}
