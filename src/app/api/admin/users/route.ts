@@ -1,6 +1,6 @@
-import { ensureDatabase } from "@/lib/migrate";
+;
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { requireAuth, hashPassword } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const users = await prisma.user.findMany({
+    const users = await db.user.findMany({
       where,
       select: {
         id: true, email: true, firstName: true, lastName: true,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const passwordHash = await hashPassword(data.password || "password123");
 
-    const user = await prisma.user.create({
+    const user = await db.user.create({
       data: {
         email: data.email,
         passwordHash,

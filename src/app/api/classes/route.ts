@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     let classes;
     if (user.role === "ADMIN") {
-      classes = await prisma.class.findMany({
+      classes = await db.class.findMany({
         where: search ? { name: { contains: search } } : {},
         include: {
           teachers: { include: { teacher: { include: { user: { select: { firstName: true, lastName: true } } } } } },
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
       });
     } else if (user.role === "TEACHER") {
-      classes = await prisma.class.findMany({
+      classes = await db.class.findMany({
         where: {
           ...(search ? { name: { contains: search } } : {}),
           teachers: { some: { teacher: { userId: user.id } } },
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
       });
     } else {
-      classes = await prisma.class.findMany({
+      classes = await db.class.findMany({
         where: {
           ...(search ? { name: { contains: search } } : {}),
           isPublished: true,
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth(["ADMIN", "TEACHER"]);
     const data = await req.json();
-    const cls = await prisma.class.create({
+    const cls = await db.class.create({
       data: {
         name: data.name, code: data.code, description: data.description,
         category: data.category, semester: data.semester, academicYear: data.academicYear,
