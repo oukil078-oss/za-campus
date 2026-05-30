@@ -1,16 +1,113 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import { Menu, X, GraduationCap, Star, ArrowRight, Tv, FileText, Brain, Award, Trophy, Shield, BookOpen } from "lucide-react";
+import { GraduationCap, BookOpen, Users, Award, ArrowRight, Shield, Brain, CheckCircle } from "lucide-react";
 
 export default function HomePage() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  return (<div className="min-h-screen">
-    <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100"><div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16"><Link href="/" className="flex items-center gap-2.5"><div className="w-9 h-9 rounded-lg bg-[#1e3a5f] flex items-center justify-center"><GraduationCap className="w-5 h-5 text-white"/></div><span className="text-xl font-bold text-[#1e3a5f]">Za<span style={{color:'#c8a951'}}>-Campus</span></span></Link><div className="hidden md:flex items-center gap-3"><Link href="/login" className="text-sm font-semibold text-white bg-[#1e3a5f] px-5 py-2.5 rounded-lg shadow-sm">Get Started</Link></div><button onClick={()=>setMobileOpen(!mobileOpen)} className="md:hidden p-2">{mobileOpen?<X className="w-5 h-5"/>:<Menu className="w-5 h-5"/>}</button></div></nav>
-    <section className="py-32 px-4 text-center" style={{background:"linear-gradient(135deg, #1e3a5f 0%, #0f2440 40%, #1a4a3d 100%)"}}><div className="max-w-4xl mx-auto"><div className="inline-flex items-center gap-2 bg-white/10 text-white/90 text-sm px-4 py-1.5 rounded-full mb-8 border border-white/20"><Star className="w-3.5 h-3.5" style={{fill:'#c8a951',color:'#c8a951'}}/>Algeria&apos;s Premier Learning Platform</div><h1 className="text-4xl sm:text-6xl font-bold text-white mb-6">Transform Your Academic <span style={{color:'#c8a951'}}>Journey</span></h1><p className="text-lg text-white/70 max-w-2xl mx-auto mb-10">A complete university LMS with courses, quizzes, progress tracking, and verified certificates.</p><Link href="/login" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold shadow-lg text-[#0f2440]" style={{background:'#c8a951'}}>Start Learning <ArrowRight className="w-4 h-4"/></Link></div></section>
-    <section className="py-24 px-4 bg-white"><div className="max-w-6xl mx-auto text-center mb-16"><h2 className="text-3xl font-bold mb-4">Everything for Academic Success</h2><p className="text-gray-500 max-w-2xl mx-auto">Students, teachers, and administrators — all in one seamless ecosystem.</p></div><div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">{[{icon:Tv,title:"Video Lectures",desc:"Stream high-quality video lectures.",color:"#3b82f6"},{icon:Brain,title:"Interactive Quizzes",desc:"Auto-graded quizzes with instant feedback.",color:"#8b5cf6"},{icon:Award,title:"Certificates",desc:"Earn professional certificates.",color:"#c8a951"},{icon:Trophy,title:"Leaderboards",desc:"Compete with peers across classes.",color:"#ef4444"},{icon:Shield,title:"Access Control",desc:"Role-based security.",color:"#6366f1"},{icon:BookOpen,title:"Full CMS",desc:"Complete content management.",color:"#10b981"}].map((f,i)=>(<div key={i} className="p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"><div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{backgroundColor:f.color+'20',color:f.color}}><f.icon className="w-6 h-6"/></div><h3 className="text-lg font-semibold mb-2">{f.title}</h3><p className="text-gray-500 text-sm">{f.desc}</p></div>))}</div></section>
-    <section className="py-24 px-4 bg-gray-50"><div className="max-w-6xl mx-auto text-center mb-16"><h2 className="text-3xl font-bold mb-4">Built for Everyone</h2></div><div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">{[{icon:Shield,role:"Administrators",items:["User Management","Class Administration","Platform Analytics"]},{icon:BookOpen,role:"Teachers",items:["Content Creation","Quiz Management","Progress Tracking"]},{icon:GraduationCap,role:"Students",items:["Video Lectures","Interactive Quizzes","Certificate Downloads"]}].map((c,i)=>(<div key={i} className="p-8 rounded-2xl bg-white border border-gray-100"><div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{background:"linear-gradient(135deg, #1e3a5f, #0f2440)"}}><c.icon className="w-6 h-6 text-white"/></div><h3 className="text-xl font-bold mb-2">{c.role}</h3><ul className="space-y-2.5">{c.items.map((item,j)=>(<li key={j} className="flex items-center gap-2.5 text-sm text-gray-700"><div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{backgroundColor:'#c8a951'}}/>{item}</li>))}</ul></div>))}</div></section>
-    <section className="py-24 px-4 text-center" style={{background:"linear-gradient(135deg, #1e3a5f 0%, #0f2440 40%, #1a4a3d 100%)"}}><div className="max-w-3xl mx-auto"><h2 className="text-3xl font-bold text-white mb-4">Ready to Elevate Your Academic Experience?</h2><p className="text-white/70 mb-8 text-lg">Join thousands of students and educators already using Za-Campus.</p><Link href="/login" className="inline-flex items-center gap-2 px-10 py-4 rounded-xl font-semibold text-lg shadow-lg text-[#0f2440]" style={{background:'#c8a951'}}>Get Started Now <ArrowRight className="w-5 h-5"/></Link></div></section>
-    <footer className="bg-gray-900 text-gray-400 py-16 px-4"><div className="max-w-6xl mx-auto text-center text-sm">&copy; {new Date().getFullYear()} Za-Campus. All rights reserved.</div></footer>
-  </div>);
+  return (
+    <div className="min-h-screen" style={{ background: "#fafaf9", color: "#1a1a1a" }}>
+      {/* Nav */}
+      <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-14">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "#1a2744" }}><GraduationCap className="w-3.5 h-3.5 text-white" /></div>
+            <span className="text-lg font-bold tracking-tight" style={{ color: "#1a2744" }}>Za<span style={{ color: "#c4a747" }}>-Campus</span></span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="btn-primary text-sm !px-4 !py-2">Sign In</Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="pt-28 pb-20 px-5 text-center hero">
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 text-xs font-semibold px-3 py-1 rounded-full mb-6 border border-white/15 uppercase tracking-wider">Higher Education Platform</div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5 tracking-tight">
+            A Learning Platform<br />Built for <span style={{ color: "#c4a747" }}>Serious Institutions</span>
+          </h1>
+          <p className="text-base text-white/60 max-w-xl mx-auto mb-8 leading-relaxed">
+            Za-Campus provides the infrastructure for rigorous academic programs — courses, assessments, credentials, and analytics in one unified system.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/login" className="btn-accent !px-6 !py-2.5 !text-base">Enter Platform <ArrowRight className="w-4 h-4" /></Link>
+            <Link href="/about" className="btn-secondary !text-white !border-white/20 hover:!bg-white/10 !px-6 !py-2.5">Learn More</Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-14 max-w-lg mx-auto">
+            {[["5,000+", "Students"], ["50+", "Courses"], ["98%", "Completion"], ["24/7", "Access"]].map(s => (
+              <div key={s[0]} className="text-center"><div className="text-xl font-bold text-white">{s[0]}</div><div className="text-xs text-white/40 mt-1 uppercase tracking-wider">{s[1]}</div></div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pillars */}
+      <section className="py-20 px-5 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Platform Pillars</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Designed for Academic Excellence</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: BookOpen, t: "Course Management", d: "Structured modules, video lectures, resources, and assessments organized for serious study.", c: "border-blue-100" },
+              { icon: Brain, t: "Assessment Engine", d: "Timed quizzes, auto-grading, detailed feedback, and final examinations with certification.", c: "border-violet-100" },
+              { icon: Shield, t: "Institutional Control", d: "Role-based access, audit trails, and administrative oversight for academic governance.", c: "border-emerald-100" },
+              { icon: Award, t: "Verified Credentials", d: "Professional certificates issued upon successful completion with unique verification IDs.", c: "border-amber-100" },
+            ].map((f, i) => (
+              <div key={i} className={`card p-6 border-l-2 ${f.c}`}>
+                <div className="w-9 h-9 rounded-md flex items-center justify-center mb-4" style={{ background: "#f3f4f6", color: "#1a2744" }}><f.icon className="w-4 h-4" /></div>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 tracking-tight">{f.t}</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">{f.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* For Whom */}
+      <section className="py-20 px-5" style={{ background: "#f5f5f4" }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Roles</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Built for Every Academic Role</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: Shield, r: "Administrators", items: ["User lifecycle management", "Class & curriculum oversight", "Institutional analytics"] },
+              { icon: BookOpen, r: "Instructors", items: ["Course content creation", "Student progress monitoring", "Assessment management"] },
+              { icon: GraduationCap, r: "Students", items: ["Structured course access", "Interactive assessments", "Verifiable credentials"] },
+            ].map((c, i) => (
+              <div key={i} className="card p-6 bg-white">
+                <div className="w-9 h-9 rounded-md flex items-center justify-center mb-4" style={{ background: "#1a2744" }}><c.icon className="w-4 h-4 text-white" /></div>
+                <h3 className="text-base font-bold text-gray-900 mb-3 tracking-tight">{c.r}</h3>
+                <ul className="space-y-2">
+                  {c.items.map((item, j) => (
+                    <li key={j} className="flex items-start gap-2 text-xs text-gray-600">
+                      <CheckCircle className="w-3.5 h-3.5 text-[#c4a747] flex-shrink-0 mt-0.5" /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-5 text-center hero">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 tracking-tight">Ready to Elevate Your Institution?</h2>
+          <p className="text-white/60 mb-8">Join leading academic programs already using Za-Campus.</p>
+          <Link href="/login" className="btn-accent !px-8 !py-3 !text-base font-bold">Get Started <ArrowRight className="w-4 h-4" /></Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-5 border-t border-gray-200 bg-white">
+        <div className="max-w-5xl mx-auto text-center text-xs text-gray-400">
+          &copy; {new Date().getFullYear()} Za-Campus. An academic technology platform.
+        </div>
+      </footer>
+    </div>
+  );
 }

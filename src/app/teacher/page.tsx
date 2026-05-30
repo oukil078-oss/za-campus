@@ -1,11 +1,86 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Users, FileText, Activity } from "lucide-react";
-export default function P() {
-  const router=useRouter();const [cls,setCls]=useState<any[]>([]);const [l,setL]=useState(true);
-  useEffect(()=>{fetch("/api/classes").then(r=>r.json()).then(d=>{setCls(d.classes||[]);setL(false)});},[]);
-  const ts=cls.reduce((s,c)=>s+(c._count?.students||0),0);const tm=cls.reduce((s,c)=>s+(c._count?.modules||0),0);
-  if(l) return <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"/></div>;
-  return (<div className="space-y-8 animate-fade-in"><div><h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1><p className="text-gray-500 mt-1">Manage your classes and students</p></div><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[{icon:BookOpen,label:"My Classes",value:cls.length,c:"bg-blue-50 text-blue-600"},{icon:Users,label:"Total Students",value:ts,c:"bg-violet-50 text-violet-600"},{icon:FileText,label:"Modules",value:tm,c:"bg-emerald-50 text-emerald-600"},{icon:Activity,label:"Active",value:cls.filter(c=>c.isPublished).length,c:"bg-amber-50 text-amber-600"}].map((x,i)=>(<div key={i} className="card-premium p-4"><div className={`w-10 h-10 rounded-xl ${x.c} flex items-center justify-center mb-3`}><x.icon className="w-5 h-5"/></div><div className="text-2xl font-bold">{x.value}</div><div className="text-xs text-gray-500 mt-0.5">{x.label}</div></div>))}</div><div className="card-premium p-6"><h2 className="text-lg font-semibold mb-4">My Classes</h2><div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{cls.map(c=>(<div key={c.id} onClick={()=>router.push("/teacher/classes/"+c.id)} className="p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm cursor-pointer"><div className="flex justify-between mb-2"><span className="text-xs font-medium text-primary bg-primary/5 px-2 py-0.5 rounded-full">{c.code}</span><span className={`text-xs px-2 py-0.5 rounded-full ${c.isPublished?"bg-green-50 text-green-700":"bg-gray-100 text-gray-500"}`}>{c.isPublished?"Live":"Draft"}</span></div><h3 className="font-semibold">{c.name}</h3><div className="flex items-center gap-3 text-xs text-gray-500 mt-3"><span className="flex items-center gap-1"><Users className="w-3 h-3"/>{c._count?.students||0}</span><span className="flex items-center gap-1"><FileText className="w-3 h-3"/>{c._count?.modules||0}</span></div></div>))}</div></div></div>);
+import { BookOpen, Users, FileText, Activity, Plus, Brain, BarChart3, ChevronRight } from "lucide-react";
+
+export default function TeacherDashboard() {
+  const router = useRouter();
+  const [classes, setClasses] = useState<any[]>([]); const [user, setUser] = useState<any>(null); const [loading, setLoading] = useState(true);
+  useEffect(() => { Promise.all([fetch("/api/auth/me").then(r => r.json()), fetch("/api/classes").then(r => r.json())]).then(([me, cd]) => { setUser(me.user); setClasses(cd.classes || []); setLoading(false); }); }, []);
+  if (loading) return <div className="flex justify-center py-24"><div className="w-6 h-6 border-2 border-[#1a2744] border-t-transparent rounded-full animate-spin" /></div>;
+
+  const totalStudents = classes.reduce((s: number, c: any) => s + (c._count?.students || 0), 0);
+  const totalModules = classes.reduce((s: number, c: any) => s + (c._count?.modules || 0), 0);
+  const activeClasses = classes.filter((c: any) => c.isPublished === "true" || c.isPublished === true);
+
+  return (
+    <div className="space-y-8 animate-fade-in max-w-5xl">
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Instructor Portal</p>
+        <h1 className="text-xl font-bold text-gray-900 tracking-tight">Welcome, {user?.firstName} {user?.lastName}</h1>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: BookOpen, l: "My Classes", v: classes.length, c: "border-blue-200" },
+          { icon: Users, l: "Total Students", v: totalStudents, c: "border-violet-200" },
+          { icon: FileText, l: "Total Modules", v: totalModules, c: "border-emerald-200" },
+          { icon: Activity, l: "Active Classes", v: activeClasses.length, c: "border-amber-200" },
+        ].map((s, i) => (
+          <div key={i} className={`card p-4 border-l-2 ${s.c}`}>
+            <s.icon className="w-4 h-4 text-gray-400 mb-2" />
+            <div className="text-xl font-bold text-gray-900">{s.v}</div>
+            <div className="text-[0.65rem] text-gray-400 font-semibold uppercase tracking-wider">{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">My Classes</h2>
+          {classes.length === 0 ? (
+            <div className="card p-8 text-center text-sm text-gray-400">No classes assigned. Contact an administrator.</div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {classes.map((c: any) => (
+                <div key={c.id} onClick={() => router.push(`/teacher/classes/${c.id}`)} className="card p-4 cursor-pointer hover:border-gray-300 transition-colors group">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="badge badge-info">{c.code}</span>
+                    <span className={`badge ${c.isPublished === "true" || c.isPublished === true ? "badge-success" : "badge-neutral"}`}>{c.isPublished === "true" || c.isPublished === true ? "Published" : "Draft"}</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900 mb-2">{c.name}</h3>
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {c._count?.students || 0} students</span>
+                    <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {c._count?.modules || 0} modules</span>
+                  </div>
+                  <div className="mt-3 w-full h-1 rounded-full bg-gray-100"><div className="h-1 rounded-full" style={{ width: `${Math.min(100, (c._count?.modules || 0) * 15)}%`, background: "#1a2744" }} /></div>
+                  <button onClick={(e) => { e.stopPropagation(); router.push(`/teacher/classes/${c.id}`); }} className="mt-3 text-xs font-semibold text-gray-500 hover:text-gray-900">Manage Content →</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card p-5 h-fit">
+          <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Actions</h2>
+          <div className="space-y-1.5">
+            {[
+              { l: "View All Students", to: "/teacher/students", icon: Users },
+              { l: "Manage Assessments", to: "/teacher/quizzes", icon: Brain },
+              { l: "Class Insights", to: "/teacher", icon: BarChart3 },
+            ].map((a, i) => (
+              <button key={i} onClick={() => router.push(a.to)} className="w-full text-left px-3 py-2.5 rounded-md text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-between">
+                <span className="flex items-center gap-2"><a.icon className="w-3.5 h-3.5 text-gray-400" /> {a.l}</span>
+                <ChevronRight className="w-3 h-3 text-gray-300" />
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-[0.65rem] text-gray-400 font-semibold uppercase tracking-wider mb-2">Summary</p>
+            <p className="text-xs text-gray-500">{totalModules} modules across {classes.length} classes · {totalStudents} total students</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

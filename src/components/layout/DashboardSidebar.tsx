@@ -2,12 +2,28 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { GraduationCap, LayoutDashboard, Users, BookOpen, Award, BarChart3, LogOut, Menu, Bell, Home, Brain, Trophy } from "lucide-react";
+import { GraduationCap, LayoutDashboard, Users, BookOpen, Award, BarChart3, LogOut, Menu, Bell, Home, Brain, Trophy, BookMarked } from "lucide-react";
 
-const links:Record<string,{href:string;label:string;icon:any}[]> = {
-  ADMIN: [{href:"/admin",label:"Dashboard",icon:LayoutDashboard},{href:"/admin/users",label:"Users",icon:Users},{href:"/admin/classes",label:"Classes",icon:BookOpen},{href:"/admin/certificates",label:"Certificates",icon:Award},{href:"/admin/analytics",label:"Analytics",icon:BarChart3}],
-  TEACHER: [{href:"/teacher",label:"Dashboard",icon:LayoutDashboard},{href:"/teacher/classes",label:"My Classes",icon:BookOpen},{href:"/teacher/quizzes",label:"Quizzes",icon:Brain},{href:"/teacher/students",label:"Students",icon:Users}],
-  STUDENT: [{href:"/student",label:"Dashboard",icon:LayoutDashboard},{href:"/student/classes",label:"My Classes",icon:BookOpen},{href:"/student/quizzes",label:"Quizzes",icon:Brain},{href:"/student/certificates",label:"Certificates",icon:Award},{href:"/student/leaderboard",label:"Leaderboard",icon:Trophy}],
+const navConfig: Record<string, { href: string; label: string; icon: any }[]> = {
+  ADMIN: [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/classes", label: "Classes", icon: BookOpen },
+    { href: "/admin/certificates", label: "Certificates", icon: Award },
+    { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  ],
+  TEACHER: [
+    { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/teacher/classes", label: "My Classes", icon: BookOpen },
+    { href: "/teacher/students", label: "Students", icon: Users },
+    { href: "/teacher/quizzes", label: "Assessments", icon: Brain },
+  ],
+  STUDENT: [
+    { href: "/student", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/student/classes", label: "My Courses", icon: BookMarked },
+    { href: "/student/leaderboard", label: "Standings", icon: Trophy },
+    { href: "/student/certificates", label: "Credentials", icon: Award },
+  ],
 };
 
 export default function DashboardSidebar({ children, role }: { children: React.ReactNode; role: string }) {
@@ -17,45 +33,78 @@ export default function DashboardSidebar({ children, role }: { children: React.R
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unread, setUnread] = useState(0);
   const router = useRouter(); const pathname = usePathname();
-  const navLinks = links[role] || [];
+  const links = navConfig[role] || [];
 
-  useEffect(()=>{
-    fetch("/api/auth/me").then(r=>r.json()).then(d=>{if(d.user)setUser(d.user);else router.push("/login");}).catch(()=>router.push("/login"));
-    fetch("/api/notifications").then(r=>r.json()).then(d=>{setNotifications(d.notifications?.slice(0,5)||[]);setUnread(d.unreadCount||0);}).catch(()=>{});
-  },[]);
+  useEffect(() => {
+    fetch("/api/auth/me").then(r => r.json()).then(d => { if (d.user) setUser(d.user); else router.push("/login"); });
+    fetch("/api/notifications").then(r => r.json()).then(d => { setNotifications(d.notifications?.slice(0, 5) || []); setUnread(d.unreadCount || 0); });
+  }, []);
 
-  const handleLogout = async () => { await fetch("/api/auth/logout",{method:"POST"}); router.push("/login"); };
-  const roleBadge:Record<string,string> = {ADMIN:"bg-red-100 text-red-700 font-bold",TEACHER:"bg-emerald-100 text-emerald-700 font-bold",STUDENT:"bg-violet-100 text-violet-700 font-bold"};
+  const handleLogout = async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/login"); };
+  const roleStr = role === "ADMIN" ? "Administrator" : role === "TEACHER" ? "Instructor" : "Student";
 
-  return (<div className="min-h-screen flex" style={{background:"#f8fafc"}}>
-    <aside className={`${collapsed?"w-[72px]":"w-64"} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 fixed inset-y-0 z-30 shadow-sm`}>
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:"#1e3a5f"}}><GraduationCap className="w-5 h-5 text-white"/></div>
-        {!collapsed&&<span className="text-lg font-bold" style={{color:"#1e3a5f"}}>Za<span style={{color:"#c8a951"}}>-Campus</span></span>}
+  const sidebar = (
+    <aside className={`${collapsed ? "w-[68px]" : "w-60"} sidebar flex flex-col transition-all duration-300 fixed inset-y-0 z-30`}>
+      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100">
+        <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: "#1a2744" }}>
+          <GraduationCap className="w-4 h-4 text-white" />
+        </div>
+        {!collapsed && <span className="text-base font-bold tracking-tight" style={{ color: "#1a2744" }}>Za<span style={{ color: "#c4a747" }}>-Campus</span></span>}
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navLinks.map(l=>{const active=pathname===l.href||(l.href!=="/"+role.toLowerCase()&&pathname.startsWith(l.href));return(<Link key={l.href} href={l.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${active?"text-white shadow-sm":"text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`} style={active?{background:"#1e3a5f"}:{}}><l.icon className={`w-5 h-5 flex-shrink-0 ${active?"":"text-gray-400"}`} style={active?{color:"#c8a951"}:{}}/>{!collapsed&&l.label}</Link>)})}
+
+      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
+        {links.map(l => {
+          const active = pathname === l.href || (l.href !== `/${role.toLowerCase()}` && pathname.startsWith(l.href));
+          return (
+            <Link key={l.href} href={l.href}
+              className={`sidebar-link flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all ${active ? "active" : ""}`}>
+              <l.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-[#c4a747]" : ""}`} />
+              {!collapsed && l.label}
+            </Link>
+          );
+        })}
       </nav>
-      <div className="border-t border-gray-100 p-3">
-        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"><Home className="w-5 h-5 flex-shrink-0 text-gray-400"/>{!collapsed&&"Public Site"}</Link>
-        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600"><LogOut className="w-5 h-5 flex-shrink-0 text-gray-400"/>{!collapsed&&"Sign Out"}</button>
+
+      <div className="border-t border-gray-100 px-2.5 py-2.5">
+        <Link href="/" className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+          <Home className="w-4 h-4 flex-shrink-0" />{!collapsed && "Home"}
+        </Link>
+        <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+          <LogOut className="w-4 h-4 flex-shrink-0" />{!collapsed && "Sign Out"}
+        </button>
       </div>
     </aside>
-    <div className={`flex-1 ${collapsed?"ml-[72px]":"ml-64"} transition-all`}>
-      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm">
-        <button onClick={()=>setCollapsed(!collapsed)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"><Menu className="w-5 h-5"/></button>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button onClick={()=>setNotifOpen(!notifOpen)} className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-600"><Bell className="w-5 h-5"/>{unread>0&&<span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white"/>}</button>
-            {notifOpen&&<div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-40 animate-scale-in"><div className="px-4 py-3 border-b border-gray-100 flex justify-between"><span className="text-sm font-bold text-gray-900">Notifications</span><span className="text-xs text-gray-500">{unread} unread</span></div><div className="max-h-64 overflow-y-auto">{notifications.length===0?<p className="text-sm text-gray-500 text-center py-8">No notifications</p>:notifications.map((n:any)=>(<div key={n.id} className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50"><p className="text-sm font-semibold text-gray-900">{n.title}</p><p className="text-xs text-gray-600 mt-0.5">{n.message}</p></div>))}</div></div>}
-          </div>
+  );
+
+  return (
+    <div className="min-h-screen flex" style={{ background: "#fafaf9" }}>
+      <div className="hidden lg:block fixed inset-y-0 z-30">{sidebar}</div>
+      <div className={`flex-1 ${collapsed ? "lg:ml-[68px]" : "lg:ml-60"} transition-all`}>
+        <header className="topbar sticky top-0 z-20 px-5 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block"><p className="text-sm font-bold text-gray-900">{user?`${user.firstName} ${user.lastName}`:"..."}</p><p className={`text-xs font-medium px-2 py-0.5 rounded-full ${roleBadge[role]||""}`}>{role}</p></div>
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{background:"#1e3a5f"}}>{user?user.firstName?.[0]+user.lastName?.[0]:"?"}</div>
+            <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:block p-1.5 rounded-md hover:bg-gray-100 text-gray-500"><Menu className="w-4 h-4" /></button>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:block">{roleStr}</span>
           </div>
-        </div>
-      </header>
-      <main className="p-6 text-gray-900">{children}</main>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button onClick={() => setNotifOpen(!notifOpen)} className="relative p-2 rounded-md hover:bg-gray-100 text-gray-500"><Bell className="w-4 h-4" />{unread > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white" />}</button>
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-40 max-h-80 overflow-y-auto animate-scale-in">
+                  <div className="sticky top-0 bg-white px-4 py-2.5 border-b border-gray-100 flex justify-between items-center"><span className="text-xs font-bold text-gray-900">Notifications</span><span className="text-xs text-gray-400">{unread} new</span></div>
+                  {notifications.length === 0 ? <p className="text-xs text-gray-400 text-center py-6">No notifications</p> : notifications.map((n: any) => (
+                    <div key={n.id} className="px-4 py-2.5 border-b border-gray-50 hover:bg-gray-50 cursor-pointer"><p className="text-xs font-semibold text-gray-900">{n.title}</p><p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p></div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2.5 pl-3 border-l border-gray-200">
+              <div className="text-right hidden sm:block"><p className="text-xs font-semibold text-gray-900 leading-tight">{user ? `${user.firstName} ${user.lastName}` : "..."}</p><p className="text-[0.65rem] text-gray-400 font-medium uppercase tracking-wider">{role}</p></div>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#1a2744" }}>{user ? (user.firstName?.[0] || "") + (user.lastName?.[0] || "") : "?"}</div>
+            </div>
+          </div>
+        </header>
+        <main className="p-5 md:p-8 max-w-7xl mx-auto">{children}</main>
+      </div>
     </div>
-  </div>);
+  );
 }
