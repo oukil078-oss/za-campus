@@ -1,25 +1,23 @@
-import { ensureDatabase } from "@/lib/migrate";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
 export async function GET() {
   try {
     await requireAuth(["ADMIN"]);
-    const [totalStudents, totalTeachers, totalAdmins, totalClasses, totalModules, totalQuizzes, totalVideos, totalFiles, banned, certificates] = await Promise.all([
-      prisma.user.count({ where: { role: "STUDENT", isBanned: false } }),
-      prisma.user.count({ where: { role: "TEACHER", isBanned: false } }),
-      prisma.user.count({ where: { role: "ADMIN" } }),
-      prisma.class.count(),
-      prisma.module.count(),
-      prisma.quiz.count(),
-      prisma.video.count(),
-      prisma.file.count(),
-      prisma.user.count({ where: { isBanned: true } }),
-      prisma.certificate.count(),
+    const [allUsers, allClasses, allModules, allQuizzes, allVideos, allFiles, allCerts] = await Promise.all([
+      db.user.findMany(), db.class.findMany(), db.module.findMany(), db.quiz.findMany(), db.video.findMany(), db.file.findMany(), db.certificate.findMany(),
     ]);
-    return NextResponse.json({
-      stats: { totalUsers: totalStudents+totalTeachers+totalAdmins, totalStudents, totalTeachers, totalAdmins, totalClasses, totalModules, totalQuizzes, totalVideos, totalFiles, banned, certificates },
-    });
+    const stats = {
+      totalStudents: allUsers.filter((u: any) => u.role === "STUDENT" && u.isBanned !== "true").length,
+      totalTeachers: allUsers.filter((u: any) => u.role === "TEACHER" && u.isBanned !== "true").length,
+      totalAdmins: allUsers.filter((u: any) => u.role === "ADMIN").length,
+      totalUsers: allUsers.filter((u: any) => u.isBanned !== "true").length,
+      totalClasses: allClasses.length, totalModules: allModules.length, totalQuizzes: allQuizzes.length,
+      totalVideos: allVideos.length, totalFiles: allFiles.length,
+      banned: allUsers.filter((u: any) => u.isBanned === "true").length,
+      certificates: allCerts.length,
+    };
+    return NextResponse.json({ stats, recentUsers: allUsers.slice(-5) });
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }

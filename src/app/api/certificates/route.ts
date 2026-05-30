@@ -1,20 +1,27 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireAuth, getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    let where: any = {};
-    if (user.role === "STUDENT") where = { studentId: user.id };
-    else if (user.role === "TEACHER") {
-      const teacher = await prisma.teacher.findUnique({ where: { userId: user.id } });
-      if (teacher) { const ids = (await prisma.classTeacher.findMany({ where: { teacherId: teacher.id } })).map(c => c.classId); where = { classId: { in: ids } }; }
+    
+    let certs = await db.certificate.findMany({ orderBy: { issueDate: "desc" } });
+    
+    if (user.role === "STUDENT") {
+      certs = certs.filter((c: any) => c.studentId === user.id);
     }
-    const certificates = await prisma.certificate.findMany({
-      where, include: { student: { select: { firstName: true, lastName: true, email: true } }, class: { select: { name: true, code: true } } }, orderBy: { issueDate: "desc" },
-    });
-    return NextResponse.json({ certificates });
+    
+    // Enrich
+    const enriched = await Promise.all(certs.map(async (c: any) => {
+      const [studentUser, cls] = await Promise.all([
+        db.user.findUnique({ where: { id: c.studentId } }),
+        db.class.findUnique({ where: { id: c.classId } }),
+      ]);
+      return { ...c, student: studentUser || {}, class: cls || {}, score: parseFloat(c.score), maxScore: parseFloat(c.maxScore) };
+    }));
+    
+    return NextResponse.json({ certificates: enriched });
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }

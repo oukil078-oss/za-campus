@@ -1,46 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireAuth();
     const { id } = await params;
-    const cls = await prisma.class.findUnique({
-      where: { id },
-      include: {
-        modules: { orderBy: { orderIndex: "asc" }, include: { _count: { select: { videos: true, files: true, quizzes: true } } } },
-        teachers: { include: { teacher: { include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } } } } },
-        students: { include: { student: { include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } } } } },
-        _count: { select: { modules: true, students: true } },
-      },
-    });
-    if (!cls) return NextResponse.json({ error: "Class not found" }, { status: 404 });
-    return NextResponse.json({ class: cls });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+    const cls = await db.class.findUnique({ where: { id } });
+    if (!cls) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    const [modules, classTeachers, classStudents, finalQuizzes] = await Promise.all([
+      db.module.findMany({ where: { classId: id }, orderBy: { orderIndex: "asc" } }),
+      db.classTeacher.findMany({ where: { classId: id } }),
+      db.classStudent.findMany({ where: { classId: id } }),
+      db.finalQuiz.findMany({ where: { classId: id } }),
+    ]);
+
+    // Enrich modules with videos, files, quizzes
+    const enrichedModules = await Promise.all(modules.map(async (mod: any) => {
+      const [videos, files, quizzes] = await Promise.all([
+        db.video.findMany({ where: { moduleId: mod.id }, orderBy: { orderIndex: "asc" } }),
+        db.file.findMany({ where: { moduleId: mod.id }, orderBy: { orderIndex: "asc" } }),
+        db.quiz.findMany({ where: { moduleId: mod.id } }),
+      ]);
+      const enrichedQuizzes = await Promise.all(quizzes.map(async (q: any) => ({
+        ...q, _count: { questions: (await db.quizQuestion.findMany({ where: { quizId: q.id } })).length }
+      })));
+      return { ...mod, videos, files, quizzes: enrichedQuizzes };
+    }));
+
+    // Enrich students
+    const enrichedStudents = await Promise.all(classStudents.map(async (cs: any) => {
+      const student = await db.student.findUnique({ where: { id: cs.studentId } });
+      const user = student ? await db.user.findUnique({ where: { id: student.userId } }) : null;
+      return { student: { ...student, user: user || {} } };
+    }));
+
+    // Enrich final quizzes
+    const enrichedFinalQuizzes = await Promise.all(finalQuizzes.map(async (fq: any) => ({
+      ...fq, _count: { questions: (await db.finalQuizQuestion.findMany({ where: { finalQuizId: fq.id } })).length }
+    })));
+
+    const _count = { students: classStudents.length, modules: modules.length };
+
+    return NextResponse.json({ class: { ...cls, modules: enrichedModules, students: enrichedStudents, finalQuizzes: enrichedFinalQuizzes, _count } });
+  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    await requireAuth(["ADMIN", "TEACHER"]);
-    const { id } = await params;
-    const data = await req.json();
-    const cls = await prisma.class.update({ where: { id }, data });
-    return NextResponse.json({ class: cls });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+  try { await requireAuth(["ADMIN", "TEACHER"]); const { id } = await params; const data = await req.json(); await db.class.update({ where: { id }, data }); return NextResponse.json({ success: true }); } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    await requireAuth(["ADMIN"]);
-    const { id } = await params;
-    await prisma.class.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+  try { await requireAuth(["ADMIN"]); const { id } = await params; await db.class.delete({ where: { id } }); return NextResponse.json({ success: true }); } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }

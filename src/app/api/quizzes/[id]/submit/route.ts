@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db, ID } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -7,86 +7,45 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const user = await requireAuth(["STUDENT"]);
     const { id } = await params;
     const { answers } = await req.json();
-
-    const student = await prisma.student.findUnique({ where: { userId: user.id } });
+    const student = user.student;
     if (!student) return NextResponse.json({ error: "Student profile not found" }, { status: 404 });
 
-    const quiz = await prisma.quiz.findUnique({
-      where: { id },
-      include: { questions: true, module: { select: { classId: true } } },
-    });
+    const quiz = await db.quiz.findUnique({ where: { id } });
     if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+    const questions = await db.quizQuestion.findMany({ where: { quizId: id } });
 
-    let totalScore = 0;
-    let totalPoints = 0;
-    const answerResults: any[] = [];
+    let totalScore = 0, totalPoints = 0;
+    const attemptId = ID.unique();
 
-    // Create attempt
-    const attempt = await prisma.quizAttempt.create({
-      data: {
-        quizId: id, studentId: student.id, startedAt: new Date(),
-        attemptNumber: (await prisma.quizAttempt.count({ where: { quizId: id, studentId: student.id } })) + 1,
-      },
+    await db.quizAttempt.create({
+      data: { id: attemptId, quizId: id, studentId: student.id, startedAt: new Date().toISOString(),
+        attemptNumber: String((await db.quizAttempt.findMany({ where: { quizId: id, studentId: student.id } })).length + 1) }
     });
 
-    for (const q of quiz.questions) {
-      const studentAnswer = answers[q.id] || "";
-      const correct = studentAnswer === q.correctAnswer;
-      const points = correct ? q.points : 0;
-      totalScore += points;
-      totalPoints += q.points;
-
-      await prisma.quizAnswer.create({
-        data: {
-          attemptId: attempt.id, questionId: q.id,
-          selectedAnswer: studentAnswer, isCorrect: correct, pointsEarned: points,
-        },
+    const answerResults: any[] = [];
+    for (const q of questions) {
+      const studentAnswer = answers[q.id] || "", correct = studentAnswer === q.correctAnswer;
+      const points = correct ? parseFloat(q.points) : 0;
+      totalScore += points; totalPoints += parseFloat(q.points);
+      await db.quizAnswer.create({
+        data: { attemptId: attemptId, questionId: q.id, selectedAnswer: studentAnswer, isCorrect: correct ? "true" : "false", pointsEarned: String(points) }
       });
-
-      answerResults.push({
-        questionId: q.id, questionText: q.questionText,
-        correctAnswer: q.correctAnswer, yourAnswer: studentAnswer,
-        isCorrect: correct, points,
-      });
+      answerResults.push({ questionId: q.id, questionText: q.questionText, correctAnswer: q.correctAnswer, yourAnswer: studentAnswer, isCorrect: correct, points });
     }
 
     const percentage = Math.round((totalScore / totalPoints) * 100);
-    const isPassed = percentage >= quiz.passingScore;
-
-    await prisma.quizAttempt.update({
-      where: { id: attempt.id },
-      data: { submittedAt: new Date(), score: totalScore, totalPoints, percentage, isPassed, timeSpent: 600 },
+    const isPassed = percentage >= parseFloat(quiz.passingScore);
+    await db.quizAttempt.update({
+      where: { id: attemptId },
+      data: { submittedAt: new Date().toISOString(), score: String(totalScore), totalPoints: String(totalPoints), percentage: String(percentage), isPassed: isPassed ? "true" : "false", timeSpent: "600" }
     });
 
     // Create grade
-    await prisma.grade.create({
-      data: {
-        studentId: student.id, classId: quiz.module.classId, moduleId: quiz.moduleId,
-        quizId: id, type: "MODULE_QUIZ", score: totalScore, maxScore: totalPoints,
-        percentage, isPassed,
-      },
-    });
-
-    // Update leaderboard
-    const grades = await prisma.grade.findMany({ where: { studentId: student.id, classId: quiz.module.classId } });
-    const avgPercent = grades.reduce((s, g) => s + g.percentage, 0) / grades.length;
-    await prisma.leaderboard.upsert({
-      where: { classId_studentId_period: { classId: quiz.module.classId, studentId: student.id, period: "ALL_TIME" } },
-      update: { totalScore: avgPercent },
-      create: { classId: quiz.module.classId, studentId: student.id, totalScore: avgPercent, period: "ALL_TIME" },
-    });
-
-    // Notification
-    await prisma.notification.create({
-      data: {
-        userId: user.id, title: "Quiz Graded",
-        message: `You scored ${totalScore}/${totalPoints} (${percentage}%) on "${quiz.title}". ${isPassed ? "Passed!" : "Keep trying!"}`,
-        type: "QUIZ_GRADED",
-      },
+    await db.grade.create({
+      data: { studentId: student.id, classId: (await db.module.findUnique({ where: { id: quiz.moduleId } }))?.classId || "",
+        moduleId: quiz.moduleId, quizId: id, type: "MODULE_QUIZ", score: String(totalScore), maxScore: String(totalPoints), percentage: String(percentage), isPassed: isPassed ? "true" : "false" }
     });
 
     return NextResponse.json({ attempt: { score: totalScore, totalPoints, percentage, isPassed }, results: answerResults });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }

@@ -1,4 +1,2 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
-export async function POST(req: NextRequest) { try { await requireAuth(["ADMIN","TEACHER"]); const d = await req.json(); const f = await prisma.file.create({data:d}); return NextResponse.json({file:f},{status:201}); } catch(e:any) { return NextResponse.json({error:e.message},{status:500}); } }
+import { NextRequest, NextResponse } from "next/server"; import { db } from "@/lib/db"; import { requireAuth } from "@/lib/auth";
+export async function POST(req: NextRequest) { try { await requireAuth(["ADMIN","TEACHER"]); const d = await req.json(); await db.file.create({ data: d }); return NextResponse.json({ success: true }, { status: 201 }); } catch(e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); } }
