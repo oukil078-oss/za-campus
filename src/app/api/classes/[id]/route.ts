@@ -6,7 +6,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     await requireAuth();
     const { id } = await params;
-    const cls = await db.class.findUnique({ where: { id } });
+    const cls: any = await db.class.findUnique({ where: { id } });
     if (!cls) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const [modules, classTeachers, classStudents, finalQuizzes] = await Promise.all([
@@ -16,39 +16,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       db.finalQuiz.findMany({ where: { classId: id } }),
     ]);
 
-    // Enrich modules with videos, files, quizzes
     const enrichedModules = await Promise.all(modules.map(async (mod: any) => {
       const [videos, files, quizzes] = await Promise.all([
         db.video.findMany({ where: { moduleId: mod.id }, orderBy: { orderIndex: "asc" } }),
         db.file.findMany({ where: { moduleId: mod.id }, orderBy: { orderIndex: "asc" } }),
         db.quiz.findMany({ where: { moduleId: mod.id } }),
       ]);
-      const enrichedQuizzes = await Promise.all(quizzes.map(async (q: any) => ({
-        ...q, _count: { questions: (await db.quizQuestion.findMany({ where: { quizId: q.id } })).length }
-      })));
+      const enrichedQuizzes = await Promise.all(quizzes.map(async (q: any) => ({ ...q, _count: { questions: (await db.quizQuestion.findMany({ where: { quizId: q.id } })).length } })));
       return { ...mod, videos, files, quizzes: enrichedQuizzes };
     }));
 
-    // Enrich students
     const enrichedStudents = await Promise.all(classStudents.map(async (cs: any) => {
-      const student = await db.student.findUnique({ where: { id: cs.studentId } });
+      const student: any = await db.student.findUnique({ where: { id: cs.studentId } });
       const user = student ? await db.user.findUnique({ where: { id: student.userId } }) : null;
       return { student: { ...student, user: user || {} } };
     }));
 
-    // Enrich final quizzes
-    const enrichedFinalQuizzes = await Promise.all(finalQuizzes.map(async (fq: any) => ({
-      ...fq, _count: { questions: (await db.finalQuizQuestion.findMany({ where: { finalQuizId: fq.id } })).length }
-    })));
+    const enrichedFinalQuizzes = await Promise.all(finalQuizzes.map(async (fq: any) => ({ ...fq, _count: { questions: (await db.finalQuizQuestion.findMany({ where: { finalQuizId: fq.id } })).length } })));
 
-    const _count = { students: classStudents.length, modules: modules.length };
-
-    return NextResponse.json({ class: { ...cls, modules: enrichedModules, students: enrichedStudents, finalQuizzes: enrichedFinalQuizzes, _count } });
+    return NextResponse.json({ class: { ...cls, modules: enrichedModules, students: enrichedStudents, finalQuizzes: enrichedFinalQuizzes, _count: { students: classStudents.length, modules: modules.length } } });
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try { await requireAuth(["ADMIN", "TEACHER"]); const { id } = await params; const data = await req.json(); await db.class.update({ where: { id }, data }); return NextResponse.json({ success: true }); } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+  try { await requireAuth(["ADMIN", "TEACHER"]); const { id } = await params; await db.class.update({ where: { id }, data: await req.json() }); return NextResponse.json({ success: true }); } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

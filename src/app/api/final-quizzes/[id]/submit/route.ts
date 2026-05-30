@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const fq = await db.finalQuiz.findUnique({ where: { id } });
     if (!fq) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const questions = await db.finalQuizQuestion.findMany({ where: { finalQuizId: id } });
+    const questions = await db.finalQuizQuestion.findMany({ where: { finalQuizId: id }, orderBy: { orderIndex: "asc" } });
 
     let totalScore = 0, totalPoints = 0;
     const attemptId = ID.unique();
@@ -37,12 +37,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await db.grade.create({ data: { studentId: student.id, classId: fq.classId, type: "FINAL_QUIZ", score: String(score20), maxScore: "20", percentage: String(pct), isPassed: passed ? "true" : "false" } });
 
     if (passed) {
-      const certNum = "CERT-" + (await db.class.findUnique({ where: { id: fq.classId } }))?.code + "-" + student.id.slice(0, 8).toUpperCase();
+      const cls: any = await db.class.findUnique({ where: { id: fq.classId } });
+      const certNum = "CERT-" + (cls?.code || "XX") + "-" + student.id.slice(0, 8).toUpperCase();
       const existing = await db.certificate.findFirst({ where: { studentId: user.id, classId: fq.classId } });
       if (!existing) {
-        await db.certificate.create({ data: { studentId: user.id, classId: fq.classId, certificateNumber: certNum, score: String(score20), maxScore: "20", status: "ISSUED", issueDate: new Date().toISOString() } });
+        await db.certificate.create({ data: { studentId: user.id, classId: fq.classId, finalAttemptId: attemptId, certificateNumber: certNum, score: String(score20), maxScore: "20", status: "ISSUED", issueDate: new Date().toISOString() } });
       }
-      await db.notification.create({ data: { userId: user.id, title: "Certificate Earned!", message: "Passed " + (await db.class.findUnique({ where: { id: fq.classId } }))?.name + " with " + score20 + "/20!", type: "CERTIFICATE_EARNED" } });
+      await db.notification.create({ data: { userId: user.id, title: "Certificate Earned!", message: "Passed with " + score20 + "/20!", type: "CERTIFICATE_EARNED" } });
     }
 
     return NextResponse.json({ attempt: { score: score20, totalPoints: 20, percentage: pct, isPassed: passed }, passed });
