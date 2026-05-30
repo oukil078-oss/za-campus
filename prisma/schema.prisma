@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -35,7 +35,6 @@ model User {
   @@index([role])
   @@index([isActive, isBanned])
 }
-
 
 model Student {
   id            String   @id @default(uuid())
