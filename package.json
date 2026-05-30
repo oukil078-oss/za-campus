@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && npx prisma db push --accept-data-loss && next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
-    "lint": "eslint",
     "postinstall": "npx prisma generate"
   },
   "dependencies": {
@@ -39,6 +38,7 @@
     "jspdf-autotable": "^3.8.0",
     "lucide-react": "^0.378.0",
     "next": "15.1.0",
+    "pg": "^8.13.0",
     "prisma": "^5.22.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
@@ -52,6 +52,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.0",
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@types/uuid": "^9.0.0",

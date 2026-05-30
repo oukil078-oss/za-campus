@@ -1,3 +1,4 @@
+import { ensureDatabase } from "@/lib/migrate";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, hashPassword } from "@/lib/auth";
